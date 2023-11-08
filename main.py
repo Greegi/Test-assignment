@@ -3,12 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import heapq
 
-
 class CityGrid:
     def __init__(self, N, M, obstructed_prob=0.3):
         self.N = N
         self.M = M
         self.grid = np.zeros((N, M), dtype=int)
+        self.towers = []  # Список для хранения размещенных башен
 
         # Инициализируем блоки с преградами
         for i in range(N):
@@ -16,19 +16,20 @@ class CityGrid:
                 if random.random() < obstructed_prob:
                     self.grid[i][j] = 1  # Помечаем как преграду
 
-    def place_tower(self, x, y, range_R):
+    def place_tower(self, x, y, range_R, cost):
         # Размещаем башню и визуализируем ее зону покрытия
+        self.towers.append((x, y, range_R, cost))  # Добавляем башню в список
         for i in range(max(0, x - range_R), min(self.N, x + range_R + 1)):
             for j in range(max(0, y - range_R), min(self.M, y + range_R + 1)):
                 if (x - i) ** 2 + (y - j) ** 2 <= range_R ** 2 and self.grid[i][j] != 1:
                     self.grid[i][j] = 2  # Помечаем как покрытие башни
 
-    def optimize_tower_placement(self, range_R):
+    def optimize_tower_placement(self, range_R, cost):
         # Реализуем алгоритм размещения башен, чтобы покрыть непрегражденные блоки
         for i in range(self.N):
             for j in range(self.M):
                 if self.grid[i][j] != 1:
-                    self.place_tower(i, j, range_R)
+                    self.place_tower(i, j, range_R, cost)
 
     def find_reliable_path(self, tower1, tower2):
         # Проверяем, являются ли башни валидными
@@ -97,31 +98,18 @@ class CityGrid:
         distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
         return distance
 
-    def visualize_reliable_path(self, path):
-        # Визуализация надежного пути между башнями
-        if not path:
-            return
-
-        reliable_path = np.copy(self.grid)
-        for x, y in path:
-            reliable_path[x, y] = 3  # Помечаем путь
-
-        plt.imshow(reliable_path, cmap='viridis', interpolation='nearest')
-        plt.show()
-
-    def visualize_city(self):
-        # Визуализируем CityGrid с использованием Matplotlib
-        plt.imshow(self.grid, cmap='viridis', interpolation='nearest')
-        plt.show()
-
-    def visualize_grid(self):
-        plt.imshow(self.grid, cmap='viridis', interpolation='nearest')
-        plt.show()
-
     def visualize(self, aspect='city', path=None):
+        # Визуализация сетки города
         if aspect == 'city':
             plt.imshow(self.grid, cmap='viridis', interpolation='nearest')
             plt.show()
+        # Визуализация башен
+        elif aspect == 'towers':
+            tower_locations = np.array([tower[:2] for tower in self.towers])
+            plt.scatter(tower_locations[:, 1], tower_locations[:, 0], marker='s', c='r', label='Towers')
+            plt.legend()
+            plt.show()
+        # Визуализация надежного пути между башнями
         elif aspect == 'reliable_path' and path:
             reliable_path = np.copy(self.grid)
             for x, y in path:
@@ -129,16 +117,20 @@ class CityGrid:
             plt.imshow(reliable_path, cmap='viridis', interpolation='nearest')
             plt.show()
 
-
 # Пример использования
 city = CityGrid(10, 10)
-city.optimize_tower_placement(20)
-city.visualize('city')
+city.optimize_tower_placement(3, 100)  # Настроим радиус и стоимость здесь
+city.visualize(aspect='city')
 
-path = city.find_reliable_path((3, 4), (6, 7))
-city.visualize('reliable_path', path)
+# Размещение башен в координатах (3, 4) и (6, 7) с радиусами и стоимостью
+city.place_tower(4, 4, 3, 100)
+city.place_tower(6, 7, 2, 80)
 
-if path:
-    print(f"Надежный путь: {path}")
-else:
-    print("Надежный путь не найден")
+# Визуализация размещенных башен и надежного пути между ними
+city.visualize(aspect='towers')
+
+tower1 = city.towers[0]
+tower2 = city.towers[1]
+reliable_path = city.find_reliable_path(tower1[:2], tower2[:2])
+if reliable_path:
+    city.visualize(aspect='reliable_path', path=reliable_path)
