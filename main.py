@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import heapq
 
+
 class CityGrid:
     def __init__(self, N, M, obstructed_prob=0.3):
         self.N = N
@@ -31,7 +32,7 @@ class CityGrid:
     def optimize_tower_placement(self, budget):
         self.budget = budget
         self.towers = []  # Сбросим уже размещенные башни
-        radius_step = 2  # Радиус башни используется как шаг для равномерного размещения
+        radius_step = 4  # Радиус башни используется как шаг для равномерного размещения
 
         for i in range(0, self.N, radius_step):
             for j in range(0, self.M, radius_step):
@@ -115,21 +116,41 @@ class CityGrid:
         plt.figure()
         if aspect == 'city':
             plt.imshow(self.grid, cmap='viridis', interpolation='nearest', origin='lower')
+            plt.title("Город")
         elif aspect == 'towers':
             plt.imshow(self.grid, cmap='viridis', interpolation='nearest', origin='lower')
             tower_locations = np.array([tower[:2] for tower in self.towers])
-            plt.scatter(tower_locations[:, 1], tower_locations[:, 0], marker='s', c='r', label='Towers')
-            for x, y, _, _ in self.towers:
-                plt.text(y, x, f'Tower({y}, {x})', fontsize=8, color='r')
-            plt.legend()
+            radii = np.array([tower[2] for tower in self.towers])
+            unique_radii = np.unique(radii)
+            colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+
+            for i, radius in enumerate(unique_radii):
+                indices = [j for j, tower in enumerate(self.towers) if tower[2] == radius]
+                for idx in indices:
+                    x, y, range_R, _ = self.towers[idx]
+                    plt.scatter(y, x, marker='s', c=colors[i], label=f'Радиус {radius}')
+                    square = plt.Rectangle((y - range_R, x - range_R), 2 * range_R, 2 * range_R, fill=False,
+                                           color=colors[i])
+                    plt.gca().add_patch(square)
+
+            plt.legend(loc='upper right')
+            plt.title("Башни и их покрытие")
         elif aspect == 'reliable_path':
             reliable_path = np.copy(self.grid)
             for x, y in path:
                 reliable_path[x, y] = 3
             plt.imshow(reliable_path, cmap='viridis', interpolation='nearest', origin='lower')
+            plt.title("Надежный путь")
+            for tower in self.towers:
+                x, y, range_R, _ = tower
+                circle = plt.Circle((y, x), range_R, fill=False, color='r')
+                plt.gca().add_patch(circle)
             for x, y in path:
-                plt.text(y, x, f'Path({y}, {x})', fontsize=8, color='b')
+                circle = plt.Circle((y, x), 0.1, color='b')
+                plt.gca().add_patch(circle)
+
         plt.show()
+
 
 # Пример использования
 city = CityGrid(10, 10)
@@ -138,10 +159,12 @@ city.optimize_tower_placement(budget)
 city.visualize(aspect='city')
 
 # Выберем две случайные башни для поиска надежного пути
-tower1 = random.choice(city.towers)[:2]
-tower2 = random.choice(city.towers)[:2]
-city.visualize(aspect='towers')
-path = city.find_reliable_path(tower1, tower2)
-
-if path:
-    city.visualize(aspect='reliable_path', path=path)
+if city.towers:
+    tower1 = random.choice(city.towers)[:2]
+    tower2 = random.choice(city.towers)[:2]
+    city.visualize(aspect='towers')
+    path = city.find_reliable_path(tower1, tower2)
+    if path:
+        city.visualize(aspect='reliable_path', path=path)
+else:
+    print("Нет доступных башен для выбора.")

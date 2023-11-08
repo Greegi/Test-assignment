@@ -1,0 +1,10 @@
+Placed tower at (0, 0) with range 4 and cost 3. Budget remaining: 47
+Placed tower at (0, 4) with range 1 and cost 9. Budget remaining: 38
+Placed tower at (4, 0) with range 2 and cost 4. Budget remaining: 34
+Placed tower at (4, 8) with range 4 and cost 9. Budget remaining: 25
+Placed tower at (8, 0) with range 2 and cost 1. Budget remaining: 24
+Placed tower at (8, 4) with range 1 and cost 5. Budget remaining: 19
+Placed tower at (8, 8) with range 1 and cost 7. Budget remaining: 12
+Надежный путь от (4, 8) к (4, 0): [(4, 7), (3, 6), (2, 5), (1, 4), (1, 3), (2, 2), (3, 1), (4, 0)]
+
+Process finished with exit code 0
